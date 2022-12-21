@@ -8,14 +8,13 @@ import {
   Input,
   Icon,
 } from 'components/Searchbar/SearchBar.styled';
-
 import * as Yup from 'yup';
-
-const initialValues = { query: '' };
 
 const sсhema = Yup.object().shape({
   query: Yup.string().required('Name is required field.'),
 });
+
+const initialValues = { query: '' };
 
 export const Searchbar = ({ onSubmit }) => {
   const handleSubmit = ({ query }, { resetForm }) => {

@@ -1,84 +1,85 @@
+import { useState, useEffect } from 'react';
 import * as API from 'services/pixabayAPI';
 import toast, { Toaster } from 'react-hot-toast';
 
-import { Component } from 'react';
-
 import { ImageGallery } from 'components/ImageGallery/ImageGallery';
-import { imgMaper } from 'utils/imagemapper';
-import { Searchbar } from '../Searchbar/Searchbar';
 import { Loader } from 'components/Loader/Loader';
 import { Button } from 'components/Button/Button';
+import { Searchbar } from 'components/Searchbar/Searchbar';
 
-export class App extends Component {
-  state = {
-    query: '',
-    images: null,
-    page: 1,
-    isLoading: false,
-    error: null,
-    totalHits: null,
+export function App() {
+  const [query, setQuery] = useState('');
+  const [images, setImages] = useState([]);
+  const [page, setPage] = useState(1);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [totallHits, setTotallHits] = useState(null);
+
+  const handleSubmit = searchQuery => {
+    if (searchQuery.trim() === '') {
+      toast.error('Please, enter search data');
+      return;
+    }
+
+    if (query === searchQuery) {
+      toast.warn('You have the same search. Please try another word');
+      return;
+    }
+
+    setImages([]);
+    setQuery(searchQuery);
+    setPage(1);
   };
 
-  async componentDidUpdate(_, prevState) {
-    if (
-      prevState.query !== this.state.query ||
-      prevState.page !== this.state.page
-    ) {
-      this.setState({ isLoading: true });
+  const loadMore = () => {
+    setPage(prevState => prevState + 1);
+  };
 
+  const imageMaper = hits => {
+    return hits.map(({ id, webformatURL, largeImageURL, tags }) => ({
+      id,
+      webformatURL,
+      largeImageURL,
+      tags,
+    }));
+  };
+
+  useEffect(() => {
+    if (!query) {
+      return;
+    }
+
+    async function fetchImages() {
       try {
-        const { hits, totalHits } = await API.fetchImg(
-          this.state.query,
-          this.state.page
-        );
+        setIsLoading(true);
 
-        this.setState(prevState => {
-          return {
-            images: [...prevState.images, ...imgMaper(hits)],
-            totalHits,
-          };
-        });
+        const { hits, totallHits } = await API.fetchImg(query, page);
+        const pictures = imageMaper(hits);
 
-        if (totalHits === 0) {
-          toast.error('There no images. Try again');
-        }
-        if (this.state.page === 1 && totalHits !== 0) {
-          toast.success(`We found ${totalHits} images`);
-        }
+        setImages(prevState => [...prevState, ...pictures]);
+        setTotallHits(totallHits);
       } catch (error) {
-        this.setState({ error });
+        setError(true);
+        console.log(error.message);
       } finally {
-        this.setState({ isLoading: false });
+        setIsLoading(false);
       }
     }
-  }
 
-  handleSubmit = query => {
-    if (query.trim() === '') {
-      return toast.error('Please, enter search data');
-    }
-    this.setState({ images: [], page: 1, query });
-  };
+    fetchImages();
+  }, [page, query]);
 
-  loadMore = () => {
-    this.setState(prevState => ({ page: prevState.page + 1 }));
-  };
+  return (
+    <>
+      <Searchbar onSubmit={handleSubmit} />
+      {error && <p>Something went wrong, try again!</p>}
+      {isLoading && <Loader />}
 
-  render() {
-    const { images, isLoading, error, totalHits, page } = this.state;
-    const leftHits = totalHits - page * 12;
-    return (
-      <>
-        <Searchbar onSubmit={this.handleSubmit} />
-        {error && (
-          <p>Something went wrong, try again! Problem: {error.message}</p>
-        )}
-        {isLoading && <Loader />}
-
-        {images && <ImageGallery images={images} />}
-        {images && leftHits > 0 && <Button onClick={this.loadMore} />}
-        <Toaster position="bottom-left" reverseOrder={false} />
-      </>
-    );
-  }
+      {images && <ImageGallery images={images} />}
+      {images.length > 0 && totallHits - page * 12 && (
+        <Button onClick={loadMore} />
+      )}
+      <Toaster position="bottom-left" reverseOrder={false} />
+    </>
+  );
 }
