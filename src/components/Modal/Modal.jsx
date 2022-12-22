@@ -2,6 +2,9 @@ import PropTypes from 'prop-types';
 import { useEffect } from 'react';
 
 import { ModalDiv, Overlay } from 'components/Modal/Modal.styled';
+import { createPortal } from 'react-dom';
+
+const modalRoot = document.querySelector('#modal-root');
 
 export function Modal({ onClose, largeImageURL, tags }) {
   const closeByBackdrop = e => {
@@ -23,12 +26,13 @@ export function Modal({ onClose, largeImageURL, tags }) {
     };
   }, [onClose]);
 
-  return (
+  return createPortal(
     <Overlay onClick={closeByBackdrop}>
       <ModalDiv>
         <img src={largeImageURL} alt={tags}></img>
       </ModalDiv>
-    </Overlay>
+    </Overlay>,
+    modalRoot
   );
 }
 
