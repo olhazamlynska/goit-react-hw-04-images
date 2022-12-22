@@ -17,12 +17,12 @@ export function App() {
 
   const handleSubmit = searchQuery => {
     if (searchQuery.trim() === '') {
-      toast.error('Please, enter search data');
+      toast('Please, enter search data');
       return;
     }
 
     if (query === searchQuery) {
-      toast.warn('You have the same search. Please try another word');
+      toast.error('You have the same search. Please try another word');
       return;
     }
 
@@ -53,11 +53,11 @@ export function App() {
       try {
         setIsLoading(true);
 
-        const { hits, totallHits } = await API.fetchImg(query, page);
+        const { hits, totalHits } = await API.fetchImg(query, page);
         const pictures = imageMaper(hits);
 
         setImages(prevState => [...prevState, ...pictures]);
-        setTotallHits(totallHits);
+        setTotallHits(totalHits);
       } catch (error) {
         setError(true);
         console.log(error.message);
@@ -69,6 +69,8 @@ export function App() {
     fetchImages();
   }, [page, query]);
 
+  const totalHitsCondition = totallHits - page * 12;
+
   return (
     <>
       <Searchbar onSubmit={handleSubmit} />
@@ -76,9 +78,10 @@ export function App() {
       {isLoading && <Loader />}
 
       {images && <ImageGallery images={images} />}
-      {images.length > 0 && totallHits - page * 12 && (
+      {images.length > 0 && totalHitsCondition > 0 && (
         <Button onClick={loadMore} />
       )}
+
       <Toaster position="bottom-left" reverseOrder={false} />
     </>
   );

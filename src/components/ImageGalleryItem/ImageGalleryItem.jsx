@@ -6,7 +6,7 @@ import {
   Img,
 } from 'components/ImageGalleryItem/ImageGalleryItem.styled';
 
-export function ImageGalleryItem({ webformatURL, largeImageURL, tags }) {
+export function ImageGalleryItem({ id, webformatURL, largeImageURL, tags }) {
   const [showModal, setShowModal] = useState(false);
 
   // Окремі ф-ї для відкриття\звкриття модалки
@@ -24,20 +24,23 @@ export function ImageGalleryItem({ webformatURL, largeImageURL, tags }) {
   };
   return (
     <>
-      <ImageLi onClick={toogleModal}>
+      <ImageLi onClick={toogleModal} key={id}>
         <Img src={webformatURL} alt={tags} />
       </ImageLi>
 
       {showModal && (
-        <Modal onClose={toogleModal}>
-          <img src={largeImageURL} alt={tags}></img>
-        </Modal>
+        <Modal
+          onClose={toogleModal}
+          largeImageURL={largeImageURL}
+          tags={tags}
+        ></Modal>
       )}
     </>
   );
 }
 
 ImageGalleryItem.propTypes = {
+  id: PropTypes.number,
   webformatURL: PropTypes.string.isRequired,
   largeImageURL: PropTypes.string.isRequired,
   tags: PropTypes.string.isRequired,
